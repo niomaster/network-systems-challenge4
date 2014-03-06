@@ -8,21 +8,32 @@ public class LongestPrefixMatcher {
     public static char[] lastResult;
 
     public static void main(String[] args) throws IOException {
-        Router router = new Router(new File("routes.txt"));
+        Router router = new Router(new File(PIETER_ROUTES));
         Trie trie = router.getTrie();
 
-        InputStream input = new FileInputStream("lookup.bin");
+        InputStream input = new FileInputStream(PIETER_LOOKUP);
         StringBuilder builder = new StringBuilder();
 
         System.out.println(TOKEN);
+
+        int i = 0;
 
         while(input.available() >= 4) {
             lastResult = Trie.NO_DATA;
             trie.lookUp(input.read() << 24 | input.read() << 16 | input.read() << 8 | input.read());
             builder.append(lastResult);
+
+            i++;
+
+            if(i % 10000 == 0) {
+                System.out.print(builder.toString());
+                builder = new StringBuilder();
+            }
         }
 
         System.out.print(builder.toString());
+
+        throw null;
     }
 
     public static class IPUtility {
