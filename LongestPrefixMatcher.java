@@ -5,17 +5,24 @@ public class LongestPrefixMatcher {
     public static final String PIETER_LOOKUP = "C:\\Users\\Pieter\\Documents\\UTwente\\Jaar 1\\Module 3 - Netwerksystemen\\Week 4\\LPM\\lookup.bin";
     public static final String TOKEN = "PieterBosSophieLathouwers_k1kya";
 
+    public static char[] lastResult;
+
     public static void main(String[] args) throws IOException {
         Router router = new Router(new File("routes.txt"));
         Trie trie = router.getTrie();
 
         InputStream input = new FileInputStream("lookup.bin");
+        StringBuilder builder = new StringBuilder();
 
         System.out.println(TOKEN);
 
         while(input.available() >= 4) {
-            System.out.println(trie.lookUp(input.read() << 24 | input.read() << 16 | input.read() << 8 | input.read()));
+            lastResult = Trie.NO_DATA;
+            trie.lookUp(input.read() << 24 | input.read() << 16 | input.read() << 8 | input.read());
+            builder.append(lastResult);
         }
+
+        System.out.print(builder.toString());
     }
 
     public static class IPUtility {
@@ -35,9 +42,9 @@ public class LongestPrefixMatcher {
     }
 
     public static class Trie {
-        public static final int NO_DATA = -1;
+        public static final char[] NO_DATA = new char[] { '-', '1', '\n' };
 
-        private int data;
+        private char[] data;
 
         private Trie zero;
         private Trie one;
@@ -46,16 +53,8 @@ public class LongestPrefixMatcher {
             this.data = NO_DATA;
         }
 
-        public boolean hasData() {
-            return data != NO_DATA;
-        }
-
-        public int getData() {
-            return data;
-        }
-
         public void setData(int data) {
-            this.data = data;
+            this.data = (Integer.toString(data) + "\n").toCharArray();
         }
 
         public void insert(int location, int length, int data) {
@@ -80,22 +79,21 @@ public class LongestPrefixMatcher {
             }
         }
 
-        public int lookUp(int location) {
-            int bit = location & (1 << 31);
+        public void lookUp(int location) {
+            Trie current = this;
 
-            if(bit == 0) {
-                if(zero == null) {
-                    return data;
-                } else {
-                    int inner = zero.lookUp(location << 1);
-                    return inner == NO_DATA ? data : inner;
+            while(current != null) {
+                int bit = location & (1 << 31);
+                location <<= 1;
+
+                if(current.data != NO_DATA) {
+                    LongestPrefixMatcher.lastResult = current.data;
                 }
-            } else {
-                if(one == null) {
-                    return data;
+
+                if(bit == 0) {
+                    current = current.zero;
                 } else {
-                    int inner = one.lookUp(location << 1);
-                    return inner == NO_DATA ? data : inner;
+                    current = current.one;
                 }
             }
         }
